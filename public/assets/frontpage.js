@@ -57,6 +57,42 @@
       },
     })
 
+    var lastSeenTimestamp = window.localStorage.getItem(
+      'river://data/last-seen')
+    if (lastSeenTimestamp !== null) {
+      lastSeenTimestamp = parseInt(lastSeenTimestamp, 10)
+    }
+
+    var _setLastSeen = (function() {
+      var _t = null, _pending = 0
+      return function(newTs) {
+        if (_t !== null) {
+          if (newTs < _pending) {
+            return
+          }
+          _pending = newTs
+          clearTimeout(_t)
+        }
+        _t = setTimeout(function() {
+          window.localStorage.setItem('river://data/last-seen', newTs)
+          clearTimeout(_t)
+          _t = null
+        }, 1000)
+      }
+    })(),
+        _handleNewEntryForLastSeen = function(_entry) {
+          var ts = _entry.get('published_at')
+          if (ts <= lastSeenTimestamp) {
+            _entry.set('_seen', true)
+          } else {
+            _entry.set('_seen', false)
+            _setLastSeen(ts)
+          }
+        }
+
+    entries.on('add', _handleNewEntryForLastSeen)
+    entries.each(_handleNewEntryForLastSeen)
+
     var timelineView = new TimelineView({
       el: $root,
       entries: entries,
@@ -681,7 +717,9 @@
     initialize: function(opts) {
       this.model = opts.model
       this.listenTo(this.model, 'change:_filtered', this._handleFiltered)
+      this.listenTo(this.model, 'change:_seen', this._handleSeen)
       this._handleFiltered(this.model, this.model.get('_filtered'))
+      this._handleSeen(this.model, this.model.get('_seen'))
     },
 
     render: function() {
@@ -699,7 +737,6 @@
       this.$el.html(tpl)
 
       this.$el.data('id', this.model.id)
-
       this.$el.prop('href', this.model.get('link'))
 
       return this
@@ -711,6 +748,10 @@
       } else {
         this.$el.show()
       }
+    },
+
+    _handleSeen: function(model, seen) {
+      this.$el[seen ? 'addClass' : 'removeClass']('is-seen')
     },
   })
 

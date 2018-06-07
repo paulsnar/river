@@ -71,9 +71,15 @@ h1, h2, h3, h4, h5, h6 {
   color: #888;
   font-weight: bold;
 }
+.feed-entry.is-seen > .feed-entry-timestamp {
+  font-weight: normal;
+}
 
 .feed-entry-title {
   font-weight: bold;
+}
+.feed-entry.is-seen > .feed-entry-title {
+  font-weight: normal;
 }
 
 .feed-entry-summary {
