@@ -641,8 +641,15 @@
       if (pos === 0) {
         this.entries.unshift(entry)
         this.$el.prepend($entry.el)
+      } else if (pos >= this.entries.length) {
+        if (pos !== this.entries.length) {
+          console.warn('Inserting entry larger than total (%d/%d)',
+              pos, this.entries.length)
+        }
+        this.entries.push(entry)
+        this.$el.append($entry.el)
       } else {
-        var prevEntry = this.entries[pos - 1],
+        var prevEntry = this._entries.at(pos - 1).id,
             $prevEntry = this.$entries[prevEntry]
         $prevEntry.$el.append($entry.el)
 
